@@ -1,0 +1,11 @@
+{
+  "name": "freshworks-crm-dashboard",
+  "version": "1.0.0",
+  "description": "Freshworks CRM Sales Intelligence Dashboard",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
