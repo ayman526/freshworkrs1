@@ -1,7 +1,7 @@
 {
   "name": "freshworks-crm-dashboard",
   "version": "1.0.0",
-  "engines": { "node": "18.x" },
+  "engines": { "node": "26.x" },
   "scripts": {
     "start": "node server.js"
   },
