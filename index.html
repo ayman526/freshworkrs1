@@ -58,6 +58,21 @@ select:focus,input[type=date]:focus{border-color:var(--blue)}
 .page{padding:28px 32px;max-width:1600px;margin:0 auto}
 .tab-content{display:none}.tab-content.active{display:block}
 
+/* ── Auth gate ─────────────────────────── */
+#auth-gate{position:fixed;inset:0;background:var(--navy);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+#auth-gate.hidden{display:none}
+.gate-logo{font-family:'Plus Jakarta Sans',sans-serif;font-size:28px;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:4px}
+.gate-sub{font-size:12px;color:rgba(255,255,255,.4);letter-spacing:.12em;text-transform:uppercase;margin-bottom:40px}
+.gate-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:32px 36px;width:340px;display:flex;flex-direction:column;gap:16px}
+.gate-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5)}
+.gate-input{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:10px 14px;font-size:14px;color:#fff;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s}
+.gate-input:focus{border-color:var(--blue)}
+.gate-input::placeholder{color:rgba(255,255,255,.25)}
+.gate-btn{width:100%;background:var(--blue);color:#fff;border:none;border-radius:4px;padding:11px;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;letter-spacing:.04em;transition:opacity .15s}
+.gate-btn:hover{opacity:.88}
+.gate-btn:disabled{opacity:.5;cursor:not-allowed}
+.gate-error{font-size:12px;color:#f87171;text-align:center;min-height:16px}
+
 /* Section headers */
 .sec{margin-bottom:24px}
 .sec-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:700;color:var(--ink);margin-bottom:4px;letter-spacing:-.01em}
@@ -355,6 +370,18 @@ tr:hover td{background:#fafbfc}
 </style>
 </head>
 <body>
+
+<!-- Auth gate -->
+<div id="auth-gate">
+  <div class="gate-logo">FGLS Portfolio</div>
+  <div class="gate-sub">Sales Intelligence</div>
+  <div class="gate-box">
+    <label class="gate-label" for="gate-pw">Access password</label>
+    <input id="gate-pw" class="gate-input" type="password" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')gateLogin()"/>
+    <button class="gate-btn" id="gate-btn" onclick="gateLogin()">Sign in →</button>
+    <div class="gate-error" id="gate-error"></div>
+  </div>
+</div>
 
 <div id="loader">
   <div class="loader-logo">FGLS Portfolio</div>
@@ -3053,7 +3080,70 @@ function toggleTheme() {
   }
 })();
 
-init();
+// ═════════════════════════════════
+// AUTH GATE
+// ═════════════════════════════════
+const AUTH_KEY = 'fgls-auth-token';
+
+async function checkAuth() {
+  const token = localStorage.getItem(AUTH_KEY);
+  if (!token) { showGate(); return; }
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    });
+    const d = await r.json();
+    if (d.ok) { hideGate(); init(); }
+    else { localStorage.removeItem(AUTH_KEY); showGate(); }
+  } catch { showGate(); }
+}
+
+async function gateLogin() {
+  const pw = document.getElementById('gate-pw').value.trim();
+  const errEl = document.getElementById('gate-error');
+  const btn = document.getElementById('gate-btn');
+  if (!pw) { errEl.textContent = 'Please enter the password.'; return; }
+  errEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      localStorage.setItem(AUTH_KEY, d.token);
+      hideGate();
+      init();
+    } else {
+      errEl.textContent = 'Incorrect password. Please try again.';
+      btn.disabled = false;
+      btn.textContent = 'Sign in →';
+      document.getElementById('gate-pw').value = '';
+      document.getElementById('gate-pw').focus();
+    }
+  } catch {
+    errEl.textContent = 'Connection error. Please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Sign in →';
+  }
+}
+
+function showGate() {
+  document.getElementById('auth-gate').classList.remove('hidden');
+  document.getElementById('loader').style.display = 'none';
+  setTimeout(() => document.getElementById('gate-pw').focus(), 100);
+}
+
+function hideGate() {
+  document.getElementById('auth-gate').classList.add('hidden');
+}
+
+checkAuth();
 </script>
 
 <!-- Expand modal -->
