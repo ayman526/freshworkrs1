@@ -290,6 +290,9 @@ tr:hover td{background:#fafbfc}
 .esc-meta{display:flex;align-items:center;gap:5px;margin-top:4px;flex-wrap:wrap}
 .esc-co{padding:2px 6px;border-radius:2px;font-size:9px;font-weight:700}
 .esc-owner{font-size:10px;color:var(--muted)}
+.owner-only-btn{display:none;font-size:10px;padding:1px 6px;border:1px solid var(--line);border-radius:3px;background:var(--page);color:var(--ink3);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.owner-only-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.owner-row:hover .owner-only-btn{display:inline-block}
 .esc-val{font-size:11px;font-weight:700;font-family:'DM Mono',monospace;color:var(--ink)}
 
 
@@ -1020,10 +1023,20 @@ function refreshOwnerCheckboxes(crmF) {
   const checked = new Set([...document.querySelectorAll('.owner-cb:checked')].map(c=>c.value));
   const allWereChecked = checked.size === document.querySelectorAll('.owner-cb').length || checked.size === 0;
   cbxEl.innerHTML = relevant.map(o =>
-    `<label style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:12px">
-      <input type="checkbox" class="owner-cb" value="${o}" ${allWereChecked||checked.has(o)?'checked':''} onchange="onOwnerChange()"/> ${o}
+    `<label class="owner-row" style="display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;font-size:12px;position:relative">
+      <input type="checkbox" class="owner-cb" value="${o}" ${allWereChecked||checked.has(o)?'checked':''} onchange="onOwnerChange()"/>
+      <span style="flex:1">${o}</span>
+      <button class="owner-only-btn" onclick="selectOnlyOwner(event,'${o.replace(/'/g,"\\'")}')">Only</button>
     </label>`).join('');
   updateOwnerBtnLabel();
+}
+
+function selectOnlyOwner(e, ownerName) {
+  e.preventDefault(); e.stopPropagation();
+  document.querySelectorAll('.owner-cb').forEach(c => { c.checked = c.value === ownerName; });
+  document.getElementById('owner-all').checked = false;
+  updateOwnerBtnLabel();
+  applyFilters();
 }
 
 // ═════════════════════════════════
