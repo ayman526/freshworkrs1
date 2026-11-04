@@ -944,9 +944,10 @@ function toggleOwnerDropdown(e) {
   const panel = document.getElementById('owner-panel');
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 }
-document.addEventListener('click', () => {
+document.addEventListener('click', e => {
   const panel = document.getElementById('owner-panel');
-  if (panel) panel.style.display = 'none';
+  const dropdown = document.getElementById('owner-dropdown');
+  if (panel && dropdown && !dropdown.contains(e.target)) panel.style.display = 'none';
 });
 function toggleAllOwners(cb) {
   document.querySelectorAll('.owner-cb').forEach(c => { c.checked = cb.checked; });
